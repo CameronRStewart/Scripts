@@ -1,6 +1,7 @@
 import argparse
 import shutil
 from subprocess import call
+import grp
 
 parser = argparse.ArgumentParser(description='This script transfers user accounts from one ContentDM Linux installation to another, given an /etc/shadow file, an /etc/group file, a CDM users.txt file, and a CDM .htpassword file all from the current production server.')
 parser.add_argument('-s', '--shadow', dest="shadow_file_path", help="Full path to a COPY of original /etc/shadow file for input", metavar='FILE', required = True)
@@ -46,6 +47,12 @@ try:
 	new_shadow_file = open('new_shadow', 'a')
 except:
 	print "Cannot create file for shadow copy in "+call('pwd')
+
+
+try:
+        grp.getgrnam('content')
+except KeyError:
+        call(['groupadd', 'content'])
 
 users = {}
 
@@ -95,7 +102,8 @@ if add_system_user:
 	for uname in users:
 		if (users[uname]['shadow_pass']) and (not users[uname]['shadow_pass'] == ''):
                         
-			call(["useradd", "-G", "content",  uname])
+			call(["useradd",  uname])
+                        call(["usermod", "-G", "content", uname])
 
 	# Copy local /etc/shadow and create a new one with all passwords (':!!:') replaced
 	# with users[name]['shadow_pass']

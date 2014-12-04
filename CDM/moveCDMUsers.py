@@ -43,7 +43,7 @@ except:
 	print "Cannot open local /etc/shadow, make sure you are running as root"
 
 try:
-	new_shadow_file = open('new_shadow', 'w')
+	new_shadow_file = open('new_shadow', 'a')
 except:
 	print "Cannot create file for shadow copy in "+call('pwd')
 
@@ -94,7 +94,7 @@ if add_system_user:
 	# If the user's shadow pass is blank, dont make them!
 	for uname in users:
 		if (users[uname]['shadow_pass']) and (not users[uname]['shadow_pass'] == ''):
-                        print ('Name: '+uname+'\nCDM Pass: '+users[uname]['cdm_pass']+'\nshadow_pass: '+users[uname]['shadow_pass']+'\nPermissions: '+users[uname]['permissions']+'\n\n')
+                        
 			call(["useradd", "-G", "content",  uname])
 
 	# Copy local /etc/shadow and create a new one with all passwords (':!!:') replaced
@@ -102,11 +102,13 @@ if add_system_user:
 	# If the user's shadow pass is blank, dont do this!
 	for shadow_line in local_shadow_lines:
 		shadow_pass_threeple = shadow_line.partition(':')
-		name = shadow_pass_threeple[0]
-		if (users[name]['shadow_pass']) and (not users[name]['shadow_pass'] == ''):
-			new_pass = users[name]['shadow_pass']
-			new_line = shadow_line.replace(':!!:', new_pass, 1)
-			new_shadow_file.write(new_line)
+		uname = shadow_pass_threeple[0]
+                if uname in users:
+                        print ('Name: '+uname+'\nCDM Pass: '+users[uname]['cdm_pass']+'\nshadow_pass: '+users[uname]['shadow_pass']+'\nPermissions: '+users[uname]['permissions']+'\n\n')
+                        if (users[uname]['shadow_pass']) and (not users[uname]['shadow_pass'] == ''):
+                                new_pass = users[uname]['shadow_pass']
+                                new_line = shadow_line.replace(':!!:', ':'+new_pass+':', 1)
+                                new_shadow_file.write(new_line)
 
 # Create new users.txt file by looping and doing the following:
 # for user in users:

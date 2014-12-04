@@ -6,7 +6,7 @@ parser = argparse.ArgumentParser(description='This script transfers user account
 parser.add_argument('-s', '--shadow', dest="shadow_file_path", help="Full path to a COPY of original /etc/shadow file for input", metavar='FILE', required = True)
 parser.add_argument('-u', '--users', dest="users_file_path", help="Full path to a COPY of original {cdmServerRoot}/conf/users.txt file for input", metavar='FILE', required = True)
 parser.add_argument('-p', '--password', dest="password_file_path", help="Full path to a COPY of original {cdmServerRoot}/conf/.htpassword file for input", metavar='FILE', required = True)
-parser.add_argument('--modify_system', dest="add_system_user", help="Warning: Using this option will add user to system and modify you /etc/shadow file.")
+parser.add_argument('--modify_system', action="store_true", help="Warning: Using this option will add user to system and modify you /etc/shadow file.")
 
 args = parser.parse_args()
 
@@ -15,7 +15,7 @@ users_file_path = args.users_file_path
 password_file_path = args.password_file_path
 add_system_user = False
 
-if args.add_system_user:
+if args.modify_system:
 	add_system_user = True
 
 
@@ -45,7 +45,7 @@ except:
 try:
 	new_shadow_file = open('new_shadow', 'w')
 except:
-	print "Cannot create file for shadow copy in "subprocess.call('pwd')
+	print "Cannot create file for shadow copy in "+call('pwd')
 
 users = {}
 
@@ -94,7 +94,8 @@ if add_system_user:
 	# If the user's shadow pass is blank, dont make them!
 	for uname in users:
 		if (users[uname]['shadow_pass']) and (not users[uname]['shadow_pass'] == ''):
-			subprocess.call("useradd", "-G", "content", '-u', uname)
+                        print ('Name: '+uname+'\nCDM Pass: '+users[uname]['cdm_pass']+'\nshadow_pass: '+users[uname]['shadow_pass']+'\nPermissions: '+users[uname]['permissions']+'\n\n')
+			call(["useradd", "-G", "content",  uname])
 
 	# Copy local /etc/shadow and create a new one with all passwords (':!!:') replaced
 	# with users[name]['shadow_pass']
@@ -105,7 +106,7 @@ if add_system_user:
 		if (users[name]['shadow_pass']) and (not users[name]['shadow_pass'] == ''):
 			new_pass = users[name]['shadow_pass']
 			new_line = shadow_line.replace(':!!:', new_pass, 1)
-			print(new_line, file=new_shadow_file)
+			new_shadow_file.write(new_line)
 
 # Create new users.txt file by looping and doing the following:
 # for user in users:

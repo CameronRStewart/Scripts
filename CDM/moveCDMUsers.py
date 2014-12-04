@@ -38,8 +38,8 @@ except IOError:
 
 try:
 	local_shadow_file = open('/etc/shadow', 'r')
-	local_shadow_lines = local_shadow_file.readlines()
-	local_shadow_file.close()
+	#local_shadow_lines = local_shadow_file.readlines()
+	#local_shadow_file.close()
 except:
 	print "Cannot open local /etc/shadow, make sure you are running as root"
 
@@ -104,6 +104,12 @@ if add_system_user:
                         
 			call(["useradd",  uname])
                         call(["usermod", "-a", "-G", "content", uname])
+
+        
+        # I need to find a way to test opening the file early on, but refresh it's contents here.
+        # Otherwise, the shadow file wont have all the users I create above
+        local_shadow_file.seek(0)
+        local_shadow_lines = local_shadow_file.readlines()
 
 	# Copy local /etc/shadow and create a new one with all passwords (':!!:') replaced
 	# with users[name]['shadow_pass']

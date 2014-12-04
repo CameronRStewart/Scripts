@@ -103,7 +103,7 @@ if add_system_user:
 		if (users[uname]['shadow_pass']) and (not users[uname]['shadow_pass'] == ''):
                         
 			call(["useradd",  uname])
-                        call(["usermod", "-G", "content", uname])
+                        call(["usermod", "-a", "-G", "content", uname])
 
 	# Copy local /etc/shadow and create a new one with all passwords (':!!:') replaced
 	# with users[name]['shadow_pass']

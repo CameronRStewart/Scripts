@@ -72,11 +72,15 @@ for cdm_pass_line in orig_password_file:
 	cdm_pass_threeple = cdm_pass_line.partition(':')
 	name = cdm_pass_threeple[0]
 	password = cdm_pass_threeple[2]
-	if not name in users:
-		users[name] = {}
-		users[name]['permissions'] = ''	
-		users[name]['shadow_pass'] = ''
-	users[name]['cdm_pass'] = password.strip('\n')
+
+# Should we be creating users is they arent in the users.txt file?
+#	if not name in users:
+#		users[name] = {}
+#		users[name]['permissions'] = ''	
+#		users[name]['shadow_pass'] = ''
+
+        if name in users:
+                users[name]['cdm_pass'] = password.strip('\n')
 
 # From a copy of the production system's /etc/shadow file, grab the password hash
 # and place it into users dict under the matching user name.
@@ -138,11 +142,35 @@ if add_system_user:
 # for user in users:
 # 	user+'\t'+user['permissions']
 # if permissions = '' or cdm_pass = '', dont give account?
+try:
+	new_users_file = open('users.txt.new', 'w')
+except IOError:
+	print "Cannot create users.txt.new"
+
+for user in users:
+        new_user_line = user+"\t"+users[user]['permissions']+"\n"
+        new_users_file.write(new_user_line)
+
+new_users_file.close()
+
 
 # Create new .htpasswd file by looping and doing the following:
 # for user in users:
 #	user+':'+user['cdm_pass']
 # if permissions = '' or cdm_pass = '', dont do this?
+
+try:
+	new_password_file = open('.htpasswd.new', 'w')
+except IOError:
+	print "Cant open a file to create new .htpasswd file"
+
+for user in users:
+        if 'cdm_pass' in users[user] and not users[user]['cdm_pass'] == '':
+                new_password_line = user+":"+users[user]['cdm_pass']+"\n"
+                new_password_file.write(new_password_line)
+new_password_file.close()
+        
+
 
 #for uname in users:
 #	print ('Name: '+uname+'\nCDM Pass: '+users[uname]['cdm_pass']+'\nshadow_pass: '+users[uname]['shadow_pass']+'\nPermissions: '+users[uname]['permissions']+'\n\n\n\n')

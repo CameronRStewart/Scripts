@@ -1,5 +1,5 @@
 import argparse
-import shutil
+from shutil import copyfile
 from subprocess import call
 import grp
 
@@ -38,23 +38,21 @@ except IOError:
 
 try:
 	local_shadow_file = open('/etc/shadow', 'r')
-	#local_shadow_lines = local_shadow_file.readlines()
 	local_shadow_file.close()
 except:
 	print "Cannot open local /etc/shadow, make sure you are running as root"
-
-try:
-	new_shadow_file = open('new_shadow', 'a')
-except:
-	print "Cannot create file for shadow copy in "+call('pwd')
-
 
 try:
         grp.getgrnam('content')
 except KeyError:
         call(['groupadd', 'content'])
 
+
+
 users = {}
+
+
+
 
 # From CDM Users.txt file, grab each user and their permissions and add to users dict.
 for user_line in orig_users_file:
@@ -105,12 +103,6 @@ if add_system_user:
 			call(["useradd",  uname])
                         call(["usermod", "-a", "-G", "content", uname])
 
-        
-        # I need to find a way to test opening the file early on, but refresh it's contents here.
-        # Otherwise, the shadow file wont have all the users I create above
-        #local_shadow_file.seek(0)
-        #local_shadow_lines = local_shadow_file.readlines()
-        #local_shadow_file.close()
 
         try:
                 local_shadow_file = open('/etc/shadow', 'r')
@@ -119,6 +111,13 @@ if add_system_user:
         except:
                 print "Cannot open local /etc/shadow, make sure you are running as root"
 
+        try:
+                new_shadow_file = open('new_shadow', 'w')
+        except:
+                print "Cannot open new_shadow file"
+
+        
+
 	# Copy local /etc/shadow and create a new one with all passwords (':!!:') replaced
 	# with users[name]['shadow_pass']
 	# If the user's shadow pass is blank, dont do this!
@@ -126,11 +125,14 @@ if add_system_user:
 		shadow_pass_threeple = shadow_line.partition(':')
 		uname = shadow_pass_threeple[0]
                 if uname in users:
-                        print ('Name: '+uname+'\nCDM Pass: '+users[uname]['cdm_pass']+'\nshadow_pass: '+users[uname]['shadow_pass']+'\nPermissions: '+users[uname]['permissions']+'\n\n')
                         if (users[uname]['shadow_pass']) and (not users[uname]['shadow_pass'] == ''):
                                 new_pass = users[uname]['shadow_pass']
                                 new_line = shadow_line.replace(':!!:', ':'+new_pass+':', 1)
                                 new_shadow_file.write(new_line)
+                else:
+                        new_shadow_file.write(shadow_line)
+
+        new_shadow_file.close()
 
 # Create new users.txt file by looping and doing the following:
 # for user in users:
@@ -142,10 +144,6 @@ if add_system_user:
 #	user+':'+user['cdm_pass']
 # if permissions = '' or cdm_pass = '', dont do this?
 
-orig_users_file.close()
-orig_shadow_file.close()
-orig_password_file.close()
-new_shadow_file.close()
 #for uname in users:
 #	print ('Name: '+uname+'\nCDM Pass: '+users[uname]['cdm_pass']+'\nshadow_pass: '+users[uname]['shadow_pass']+'\nPermissions: '+users[uname]['permissions']+'\n\n\n\n')
 

@@ -192,7 +192,7 @@ sub process_file {
             }
         }
         # NOTES 
-        if ($line =~ /^=500|^=502/) {
+        if ($line =~ /^=500|^=501|^=502|^=590|^=591|^=830/) {
             $notes = "";
             $notes_a = get_delim_value("a", $line);
             $notes_b = get_delim_value("b", $line);

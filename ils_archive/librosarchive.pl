@@ -4,6 +4,7 @@ use DBI;
 use Getopt::Std;
 use utf8;
 use Encode;
+use Scalar::Util qw(looks_like_number);
 
 my $dbh;
 my $oclc_q;
@@ -67,7 +68,7 @@ my $cleanval;
 
 
 
-$delim_baseDir = "/home/bfreels/broken";
+$delim_baseDir = "/var/www/html/webenv/files_conv/broken";
 $infile = "cswrholdingsbroken150218.txt";
 
 opendir(SGMLDIR, "$delim_baseDir") or die "Can’t open $delim_baseDir:  $!";
@@ -79,6 +80,7 @@ closedir(SGMLDIR);
 foreach $entry (@entries) {
   if ($entry ne '.' && $entry ne '..') {
     open (SGMLFILE, "$delim_baseDir\/$entry") or die "Can't open $delim_baseDir\/$entry.";
+	print "Reading file $entry\n";
     process_file();
     close SGMLFILE;
   }
@@ -182,6 +184,7 @@ sub process_file {
             if ($bib_num && $bib_num ne '') { # Only need to save it for other inserts
                 $bib_num =~ s/^.b//;
             }
+			print "Grabbing info for bib#: $bib_num\n";
         }
         # TITLE 
         if ($line =~ /^=240|^=245|^=246/) {
@@ -231,8 +234,9 @@ sub to_db {
         if (!$dbh) { print 'could not connect to database';
             exit;
         }
+		print "Inserting fields into database\n";
         $dbh->do('SET NAMES utf8');
-        if ($oclc_num && $oclc_num ne '') {
+        if ($oclc_num && $oclc_num ne '' && looks_like_number($oclc_num)) {
             $oclc_q = "insert into oclc_number (oclc_number_oclc_number, oclc_number_full_record_id) values ('$oclc_num', '$bib_num')";
             $sth = $dbh->prepare($oclc_q) or die "Can't prepare $oclc_q: $dbh->errstr\n";
             $rv = $sth->execute or die "can't execute the query: $sth->errstr\n";

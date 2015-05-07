@@ -148,7 +148,7 @@ sub process_file {
             $callnum_pt_h = get_delim_value("h", $line); # call number pt. 3
             $callnum_pt_i = get_delim_value("i", $line); # barcode
             $callnum_pt_l = get_delim_value("l", $line); # location
-            $callnum_pt_n = get_delim_value("n", $line); #call number pt. 4
+            $callnum_pt_n = get_delim_value("n", $line); # call number pt. 4
             
             if ($callnum_pt_a && $callnum_pt_a ne '') {
                 $callnum .= $callnum_pt_a;
@@ -195,12 +195,14 @@ sub process_file {
             }
         }
         # NOTES 
-        if ($line =~ /^=500|^=501|^=502|^=590|^=591|^=830/) {
+        if ($line =~ /^=500|^=501|^=502|^=590|^=591|^=830|^=945/) {
             $notes = "";
             $notes_a = get_delim_value("a", $line);
             $notes_b = get_delim_value("b", $line);
             $notes_c = get_delim_value("c", $line);
             $notes_d = get_delim_value("d", $line);
+            $notes_n = get_delim_value("n", $line);
+            $notes_x = get_delim_value("x", $line);
             if ($notes_a && $notes_a ne '') {
                 $notes .= $notes_a;
             }
@@ -212,6 +214,12 @@ sub process_file {
             }
             if ($notes_d && $notes_d ne '') {
                 $notes .= $notes_d;
+            }
+            if ($notes_n && $notes_n ne '') {
+                $notes .= $notes_n;
+            }
+            if ($notes_x && $notes_x ne '') {
+                $notes .= $notes_x;
             }
             if ($notes && $notes ne '') {
                 push(@notes_array, $notes);

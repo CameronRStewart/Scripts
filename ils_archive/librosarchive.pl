@@ -53,6 +53,8 @@ my $notes_a;
 my $notes_b;
 my $notes_c;
 my $notes_d;
+my $notes_n;
+my $notes_x;
 my $notes;
 my @notes_array;
 my $isxn_q;

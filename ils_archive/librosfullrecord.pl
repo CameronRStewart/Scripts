@@ -44,11 +44,11 @@ my @entries;
 my $entry;
 
 
-my $delim_baseDir = "/home/bfreels";
+my $delim_baseDir = "/var/www/html/webenv/files_conv/text";
 # my $delim_baseDir = "c:\\aa\\libros";
 my $infile = "cswrholdingstext.txt";
 
-opendir(SGMLDIR, "$delim_baseDir\/text") or die "Can’t open $delim_baseDir\/text:  $!";
+opendir(SGMLDIR, "$delim_baseDir") or die "Can’t open $delim_baseDir:  $!";
 
 @entries = readdir(SGMLDIR);
 

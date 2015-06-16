@@ -1,5 +1,5 @@
 # This problem asks that you rotate an n X n matrix 90 degrees in-place.
-# I know that this problem is probably solved much more elegantly through matrix multiplication,
+# I know that this problem is probably solved much more elegantly through sexier, more pythonic means,
 # but this is the solution that I worked up.  Pretty ugly and needs a lot of work, but it works.
 
 

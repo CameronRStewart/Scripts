@@ -9,33 +9,28 @@ class LRUCache:
 		self.head = None
 		# CacheNode pointer to the last item (LRU)
 		self.tail = None
+		# map variable to do searches with
+		self.map = {}
 
 	# @return an integer
 	def get(self, key):
-		# cur is a pointer to a CacheNode
-		cur = self.head
 
-		while (not(cur == None)):
-			if (cur.key == key):
-        		# Value found!  Push it to the front.
-
-				# Maybe this ought to be called delete as it will
-				# not return anything.
-				value = cur.value
-				key = cur.key
-				self.pop(cur)
-				self.set(key, value)
-				return value
-
-			else:
-				cur = cur.next
-
-		return -1
+		if key in self.map:
+			value = self.map[key].value
+			self.pop(self.map[key])
+			self.set(key, value)
+			return value
+		else:
+			return -1
 
 	# @param key, an integer
 	# @param value, an integer
 	# @return nothing
 	def set(self, key, value):
+
+		if key in self.map:
+			self.pop(self.map[key])
+
 		if (self.listCount >= self.capacity):
 			self.pop(self.tail)
 			self.set(key, value)
@@ -56,6 +51,7 @@ class LRUCache:
 				old_head.last = new
 				self.head = new
 
+			self.map[key] = new
 			self.listCount = self.listCount + 1
 
 	def pop(self, node):
@@ -76,6 +72,8 @@ class LRUCache:
 			node.last.next = node.next
 			node.next.last = node.last
 
+
+		del self.map[node.key]
 		del node
 		self.listCount = self.listCount - 1
 

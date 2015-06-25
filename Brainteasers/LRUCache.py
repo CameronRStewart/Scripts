@@ -12,6 +12,7 @@ class LRUCache:
 		# map variable to do searches with
 		self.map = {}
 
+	# @param key, untyped
 	# @return an integer
 	def get(self, key):
 
@@ -54,6 +55,9 @@ class LRUCache:
 			self.map[key] = new
 			self.listCount = self.listCount + 1
 
+	# @param node, CacheNode
+	# @return, nothing 
+	# Not a true pop, more of a delete.
 	def pop(self, node):
 
 		if (node.last == None and node.next == None):
@@ -77,6 +81,8 @@ class LRUCache:
 		del node
 		self.listCount = self.listCount - 1
 
+	# This is a function designed to procure output
+	# of the results of your operations.
 	def printCache(self):
 
 		cur = self.head
@@ -85,17 +91,13 @@ class LRUCache:
 			cur = cur.next
 
 
+
 class CacheNode:
 
-	# @param value, integer
+	# @param key, untyped (string, int, etc)
+	# @param value, int
 	def __init__(self, key, value):
 		self.last = None
 		self.next = None
 		self.key = key
 		self.value = value
-
-#	def __eq__(self, node2):
-#		if (self.key == node2.key and self.value == node2.value):
-#			return True
-#		else:
-#			return False

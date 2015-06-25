@@ -60,7 +60,11 @@ class LRUCache:
 
 	def pop(self, node):
 
-		if (node.next == None):
+		if (node.last == None and node.next == None):
+			# Only element
+			self.head = None
+			self.tail = None
+		elif (node.next == None):
 			# Tail
 			node.last.next = None
 			self.tail = node.last
@@ -72,6 +76,7 @@ class LRUCache:
 			node.last.next = node.next
 			node.next.last = node.last
 
+		del node
 		self.listCount = self.listCount - 1
 
 	def printCache(self):

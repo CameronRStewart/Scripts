@@ -125,11 +125,6 @@ class Migration:
 		# year           = row[7]
 		# instrlastnames = row[8]
 
-		#row = cursor.fetchone()
-		#while row is not None:
-		#	print "Title: %s Department: %s-%s" % (self.cleanString(row[1], mode='f'), self.cleanString(row[3], mode='f'), self.cleanString(row[4], mode='c'))
-		#	row = cursor.fetchone()
-
 		row = cursor.fetchone()
 		while row is not None:
 			logging.info("\nSemester: %s%s \nDepartment: %s \nInstructor: %s \nCourse: %s-%s \nDocument: %s \n" % (self.cleanString(row[6], mode='f'),

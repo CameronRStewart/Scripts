@@ -17,18 +17,18 @@ class Migration:
 		self.dbConfig['raise_on_warnings'] = configParser.getboolean('database', 'raise_on_warnings')
 
 		#self.logger = logging.getLogger('ereserves_migration')
-		config_log_level =  configParser.get('logging', 'log_level')
+		self.config_log_level =  configParser.get('logging', 'log_level')
 		log_file_path = configParser.get('logging', 'log_path')
 
-		if config_log_level == 'DEBUG':
+		if self.config_log_level == 'DEBUG':
 			log_level = logging.DEBUG
-		elif config_log_level == 'INFO':
+		elif self.config_log_level == 'INFO':
 			log_level = logging.INFO
-		elif config_log_level == 'WARNING':
+		elif self.config_log_level == 'WARNING':
 			log_level = logging.WARNING
-		elif config_log_level == 'ERROR':
+		elif self.config_log_level == 'ERROR':
 			log_level = logging.ERROR
-		elif config_log_level == 'CRITICAL':
+		elif self.config_log_level == 'CRITICAL':
 			log_level = logging.CRITICAL
 		else:
 			# Make up a reasonable default
@@ -68,7 +68,8 @@ class Migration:
 		cursor.execute(query)
 
 		if cursor.rowcount:
-			self.printTables(cursor)
+			if self.config_log_level == 'INFO' or self.config_log_level == 'DEBUG':
+				self.logTables(cursor)
 		else:
 			print("Error: Nothing retrieved in database query.")
 			logging.error("Nothing retrieved in database query.")
@@ -105,6 +106,7 @@ class Migration:
 		# In general: filenames cant be longer than 255 chars.  
 		# We also need some room for the .pdf, .doc, et. al.
 		if len(clean_string) > 250:
+			logging.warning("Filename: %s was truncated to 250 chars.")
 			clean_string = clean_string[:250]
 
 		return clean_string
@@ -112,7 +114,7 @@ class Migration:
 
 
 
-	def printTables(self, cursor):
+	def logTables(self, cursor):
 		# docid          = row[0]
 		# title          = row[1]
 		# deptname       = row[2]
@@ -130,13 +132,13 @@ class Migration:
 
 		row = cursor.fetchone()
 		while row is not None:
-			print "Semester: %s%s \nDepartment: %s \nInstructor: %s \nCourse: %s-%s \nDocument: %s \n" % (self.cleanString(row[6], mode='f'),
+			logging.info("\nSemester: %s%s \nDepartment: %s \nInstructor: %s \nCourse: %s-%s \nDocument: %s \n" % (self.cleanString(row[6], mode='f'),
 																							self.cleanString(row[7], mode='f'), 
 																							self.cleanString(row[2], mode='f'), 
 																							self.cleanString(row[8], mode='f'),
 																							self.cleanString(row[3], mode='f'), 
 																							self.cleanString(row[4], mode='c'),
-																							self.cleanString(row[1], mode='f'))
+																							self.cleanString(row[1], mode='f')))
 			row = cursor.fetchone()
 
 

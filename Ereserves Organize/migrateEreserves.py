@@ -16,12 +16,31 @@ class Migration:
 		self.dbConfig = dict(configParser.items('database'))
 		self.dbConfig['raise_on_warnings'] = configParser.getboolean('database', 'raise_on_warnings')
 
-		#log_path = configParser
-		#logging.basicConfig(filename=)
+		#self.logger = logging.getLogger('ereserves_migration')
+		config_log_level =  configParser.get('logging', 'log_level')
+		log_file_path = configParser.get('logging', 'log_path')
+
+		if config_log_level == 'DEBUG':
+			log_level = logging.DEBUG
+		elif config_log_level == 'INFO':
+			log_level = logging.INFO
+		elif config_log_level == 'WARNING':
+			log_level = logging.WARNING
+		elif config_log_level == 'ERROR':
+			log_level = logging.ERROR
+		elif config_log_level == 'CRITICAL':
+			log_level = logging.CRITICAL
+		else:
+			# Make up a reasonable default
+			log_level = logging.ERROR
+
+
+		logging.basicConfig(filename=log_file_path, level=log_level, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S%p')
+
 
 	def runMigration(self):
+		logging.info("Running Migration")
 		cursor = self.getEresDocumentInfo()
-
 
 	def getEresDocumentInfo(self):
 		try:
@@ -29,10 +48,13 @@ class Migration:
 		except mysql.connector.Error as err:
 			if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
 				print("Database Connection Error: Access denied.  Check Username/Password.")
+				logging.error("Database Connection Error: Access denied.  Check Username/Password.")
 			elif err.errno == errorcode.ER_BAD_DB_ERROR:
 				print("Database Connection Error: Database doesn't exist.")
+				logging.error("Database Connection Error: Database doesn't exist.")
 			else:
 				print(err)
+				logging.error(err)
 			exit(1)
 
 		cursor = con.cursor()
@@ -48,7 +70,8 @@ class Migration:
 		if cursor.rowcount:
 			self.printTables(cursor)
 		else:
-			print("Warning: Nothing retrieved in database query.")
+			print("Error: Nothing retrieved in database query.")
+			logging.error("Nothing retrieved in database query.")
 			exit(0)
 
 
@@ -75,6 +98,7 @@ class Migration:
 			clean_string = ''.join(c for c in dirty_string if c in valid_coursenumber_chars)
 		else:
 			print("Error: Unknown mode value passed to cleanDirectoyName.")
+			logging.error("Unknown mode value passed to cleanDirectoyName.")
 			exit(1)
 
 		# Give ourself some room to avoid filename character count restrictions

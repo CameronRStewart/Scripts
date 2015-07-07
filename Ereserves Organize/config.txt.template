@@ -1,0 +1,11 @@
+[database]
+user =
+password =
+host =
+database =
+raise_on_warnings =
+
+[logging]
+log_path =
+log_level =
+

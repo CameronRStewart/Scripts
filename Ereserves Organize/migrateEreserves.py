@@ -73,10 +73,8 @@ class Migration:
 		cursor.execute(query)
 
 		if cursor.rowcount:
-			if self.run_mode == 'RUN':
-				self.reorganize(cursor)
-			else:
-				self.debugReorganize(cursor)
+			self.reorganize(cursor)
+
 
 		else:
 			print ("There were errors that caused this application the exit.  Please see %s" % self.log_file_path)
@@ -152,7 +150,8 @@ class Migration:
 					path_tail = path_tail+"/"+d
 					path = path+"/"+d
 					if not os.path.isdir(path):
-						os.mkdir(path, self.default_permissions)
+						if self.run_mode == 'RUN':
+							os.mkdir(path, self.default_permissions)
 						logging.debug("Created Directory: %s" % path)
 
 
@@ -164,71 +163,13 @@ class Migration:
 				for f in glob.glob(origin_path):
 					try:
 						logging.info("Copying file: %s to %s" % (f, destination_path+"/"+title))
-						shutil.copy(f, destination_path+"/"+title)
+						if self.run_mode == 'RUN':
+							shutil.copy(f, destination_path+"/"+title)
 					except shutil.Error as err:
 						logging.warning(err)
 
 			row = cursor.fetchone()
-
-	def debugReorganize(self, cursor):
-		row = cursor.fetchone()
-		while row is not None:
-
-			docid          = self.cleanString(row[0], mode='n')
-			title          = self.cleanString(row[1], mode='f')
-			deptname       = self.cleanString(row[2], mode='f')
-			abbreviation   = self.cleanString(row[3], mode='f')
-			number         = self.cleanString(row[4], mode='c')
-			coursename     = self.cleanString(row[5], mode='f')
-			term           = self.cleanString(row[6], mode='f')
-			year           = self.cleanString(row[7], mode='n')
-			instrlastnames = self.cleanString(row[8], mode='f')
-
-			if os.path.isdir(self.origin_root+"/"+docid):
-
-				path = self.destination_root
-
-				# This is just a variable to keep track of the tail of the path we are building:
-				# i.e. the destination_path minus the destination_path root.
-				path_tail = ""
-				for d in [term+year, deptname, instrlastnames, abbreviation+"-"+number]:
-					path_tail = path_tail+"/"+d
-					path = path+"/"+d
-					if not os.path.isdir(path):
-						logging.info("Created Directory: %s" % path)
-
-
-				origin_path = self.origin_root+"/"+docid
-				destination_path = self.destination_root+path_tail
-				#logging.debug("Copying from origin_path: %s to destination_path: %s" % (origin_path, destination_path))
-
-				# Have to assume that there is only one file in origin.
-				for f in glob.glob(origin_path):
-					logging.info("Copying file: %s to %s" % (f, destination_path+"/"+title))
-
-			row = cursor.fetchone()		
-
-	def logTables(self, cursor):
-		# docid          = row[0]
-		# title          = row[1]
-		# deptname       = row[2]
-		# abbreviation   = row[3]
-		# number         = row[4]
-		# coursename     = row[5]
-		# term           = row[6]
-		# year           = row[7]
-		# instrlastnames = row[8]
-
-		row = cursor.fetchone()
-		while row is not None:
-			logging.info("\nSemester: %s%s \nDepartment: %s \nInstructor: %s \nCourse: %s-%s \nDocument: %s \n" % (self.cleanString(row[6], mode='f'),
-																							self.cleanString(row[7], mode='f'), 
-																							self.cleanString(row[2], mode='f'), 
-																							self.cleanString(row[8], mode='f'),
-																							self.cleanString(row[3], mode='f'), 
-																							self.cleanString(row[4], mode='c'),
-																							self.cleanString(row[1], mode='f')))
-			row = cursor.fetchone()
+			
 
 
 

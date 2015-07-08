@@ -10,9 +10,9 @@ log_path =
 log_level =
 
 [path]
-origin_root = /tmp/ereserves_origin
-destination_root = /tmp/ereserves_destination
-default_permissions = 0750
+origin_root =
+destination_root = 
+default_permissions = 
 
 [mode]
 # run_mode indicates whether to actually perform action, or log what WOULD happen
@@ -22,4 +22,4 @@ default_permissions = 0750
 # or
 # RUN (perform actions)
 
-run_mode = DEBUG
+run_mode = 

@@ -1,5 +1,7 @@
 import os
+import shutil
 import string
+import glob
 import logging
 import mysql.connector
 from mysql.connector import errorcode
@@ -16,9 +18,12 @@ class Migration:
 		self.dbConfig = dict(configParser.items('database'))
 		self.dbConfig['raise_on_warnings'] = configParser.getboolean('database', 'raise_on_warnings')
 
-		#self.logger = logging.getLogger('ereserves_migration')
+		self.origin_root = configParser.get('path', 'origin_root')
+		self.destination_root = configParser.get('path', 'destination_root')
+		self.default_permissions = configParser.get('path', 'default_permissions')
+
 		self.config_log_level =  configParser.get('logging', 'log_level')
-		log_file_path = configParser.get('logging', 'log_path')
+		self.log_file_path = configParser.get('logging', 'log_path')
 
 		if self.config_log_level == 'DEBUG':
 			log_level = logging.DEBUG
@@ -35,7 +40,9 @@ class Migration:
 			log_level = logging.ERROR
 
 
-		logging.basicConfig(filename=log_file_path, level=log_level, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S%p')
+		logging.basicConfig(filename=self.log_file_path, level=log_level, format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S%p')
+
+		self.run_mode = configParser.get('mode', 'run_mode')
 
 
 	def runMigration(self):
@@ -47,14 +54,12 @@ class Migration:
 			con = mysql.connector.connect(**self.dbConfig)
 		except mysql.connector.Error as err:
 			if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-				print("Database Connection Error: Access denied.  Check Username/Password.")
 				logging.error("Database Connection Error: Access denied.  Check Username/Password.")
 			elif err.errno == errorcode.ER_BAD_DB_ERROR:
-				print("Database Connection Error: Database doesn't exist.")
 				logging.error("Database Connection Error: Database doesn't exist.")
 			else:
-				print(err)
 				logging.error(err)
+			print ("There were errors that caused this application the exit.  Please see %s" % self.log_file_path)
 			exit(1)
 
 		cursor = con.cursor()
@@ -68,10 +73,13 @@ class Migration:
 		cursor.execute(query)
 
 		if cursor.rowcount:
-			if self.config_log_level == 'INFO' or self.config_log_level == 'DEBUG':
-				self.logTables(cursor)
+			if self.run_mode == 'RUN':
+				self.reorganize(cursor)
+			else:
+				self.debugReorganize(cursor)
+
 		else:
-			print("Error: Nothing retrieved in database query.")
+			print ("There were errors that caused this application the exit.  Please see %s" % self.log_file_path)
 			logging.error("Nothing retrieved in database query.")
 			exit(0)
 
@@ -91,14 +99,20 @@ class Migration:
 		# Also, Later I replace any '/' with '-'
 		valid_coursenumber_chars = ".-%s%s" % (string.ascii_letters, string.digits)
 
+		# 0123456789
+		valid_numeric_chars = string.digits
+
 
 		if mode == 'f':
 			clean_string = ''.join(c for c in dirty_string if c in valid_filename_chars)
 		elif mode == 'c':
 			dirty_string.replace("/", "-")
 			clean_string = ''.join(c for c in dirty_string if c in valid_coursenumber_chars)
+		elif mode == 'n':
+			dirty_string = str(dirty_string)
+			clean_string = ''.join(c for c in dirty_string if c in valid_numeric_chars)
 		else:
-			print("Error: Unknown mode value passed to cleanDirectoyName.")
+			print ("There were errors that caused this application the exit.  Please see %s" % self.log_file_path)
 			logging.error("Unknown mode value passed to cleanDirectoyName.")
 			exit(1)
 
@@ -106,13 +120,93 @@ class Migration:
 		# In general: filenames cant be longer than 255 chars.  
 		# We also need some room for the .pdf, .doc, et. al.
 		if len(clean_string) > 250:
-			logging.warning("Filename: %s was truncated to 250 chars.")
+			logging.warning("Filename: %s was truncated to 250 chars." % clean_string)
 			clean_string = clean_string[:250]
 
 		return clean_string
 
 
 
+	def reorganize(self, cursor):
+		row = cursor.fetchone()
+		while row is not None:
+
+			docid          = self.cleanString(row[0], mode='n')
+			title          = self.cleanString(row[1], mode='f')
+			deptname       = self.cleanString(row[2], mode='f')
+			abbreviation   = self.cleanString(row[3], mode='f')
+			number         = self.cleanString(row[4], mode='c')
+			coursename     = self.cleanString(row[5], mode='f')
+			term           = self.cleanString(row[6], mode='f')
+			year           = self.cleanString(row[7], mode='n')
+			instrlastnames = self.cleanString(row[8], mode='f')
+
+			if os.path.isdir(self.origin_root+"/"+docid):
+
+				path = self.destination_root
+
+				# This is just a variable to keep track of the tail of the path we are building:
+				# i.e. the destination_path minus the destination_path root.
+				path_tail = ""
+				for d in [term+year, deptname, instrlastnames, abbreviation+"-"+number]:
+					path_tail = path_tail+"/"+d
+					path = path+"/"+d
+					if not os.path.isdir(path):
+						os.mkdir(path, self.default_permissions)
+						logging.debug("Created Directory: %s" % path)
+
+
+				origin_path = self.origin_root+"/"+docid
+				destination_path = self.destination_root+path_tail
+				#logging.info("Copying from origin_path: %s to destination_path: %s" % (origin_path, destination_path))
+
+				# Have to assume that there is only one file in origin.
+				for f in glob.glob(origin_path):
+					try:
+						logging.info("Copying file: %s to %s" % (f, destination_path+"/"+title))
+						shutil.copy(f, destination_path+"/"+title)
+					except shutil.Error as err:
+						logging.warning(err)
+
+			row = cursor.fetchone()
+
+	def debugReorganize(self, cursor):
+		row = cursor.fetchone()
+		while row is not None:
+
+			docid          = self.cleanString(row[0], mode='n')
+			title          = self.cleanString(row[1], mode='f')
+			deptname       = self.cleanString(row[2], mode='f')
+			abbreviation   = self.cleanString(row[3], mode='f')
+			number         = self.cleanString(row[4], mode='c')
+			coursename     = self.cleanString(row[5], mode='f')
+			term           = self.cleanString(row[6], mode='f')
+			year           = self.cleanString(row[7], mode='n')
+			instrlastnames = self.cleanString(row[8], mode='f')
+
+			if os.path.isdir(self.origin_root+"/"+docid):
+
+				path = self.destination_root
+
+				# This is just a variable to keep track of the tail of the path we are building:
+				# i.e. the destination_path minus the destination_path root.
+				path_tail = ""
+				for d in [term+year, deptname, instrlastnames, abbreviation+"-"+number]:
+					path_tail = path_tail+"/"+d
+					path = path+"/"+d
+					if not os.path.isdir(path):
+						logging.info("Created Directory: %s" % path)
+
+
+				origin_path = self.origin_root+"/"+docid
+				destination_path = self.destination_root+path_tail
+				#logging.debug("Copying from origin_path: %s to destination_path: %s" % (origin_path, destination_path))
+
+				# Have to assume that there is only one file in origin.
+				for f in glob.glob(origin_path):
+					logging.info("Copying file: %s to %s" % (f, destination_path+"/"+title))
+
+			row = cursor.fetchone()		
 
 	def logTables(self, cursor):
 		# docid          = row[0]

@@ -9,3 +9,17 @@ raise_on_warnings =
 log_path =
 log_level =
 
+[path]
+origin_root = /tmp/ereserves_origin
+destination_root = /tmp/ereserves_destination
+default_permissions = 0750
+
+[mode]
+# run_mode indicates whether to actually perform action, or log what WOULD happen
+# Accepted values are:
+#
+# DEBUG (log only)
+# or
+# RUN (perform actions)
+
+run_mode = DEBUG

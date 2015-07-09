@@ -157,7 +157,7 @@ class Migration:
 					path = path+"/"+d
 					if not os.path.isdir(path):
 						if self.run_mode == 'RUN':
-							os.mkdir(path, self.default_permissions)
+							os.mkdir(path, int(self.default_permissions))
 						logging.debug("Created Directory: %s" % path)
 				logging.info("Created Directory tree: %s" % path)
 

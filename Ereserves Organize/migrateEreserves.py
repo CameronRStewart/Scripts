@@ -64,11 +64,13 @@ class Migration:
 
 		cursor = con.cursor()
 
+		# TODO: This query has a massive added overhead by running the ORDERBY statement, but it's useful for debugging.
 		query = ("""SELECT coursetodoc.docid, documents.title, departments.deptname, departments.abbreviation, courses.number, courses.coursename, courses.term, courses.year, courses.instrlastnames
 					FROM coursetodoc
 					JOIN courses ON coursetodoc.courseid=courses.courseid
 					JOIN departments ON courses.deptID=departments.deptid
-					JOIN documents ON coursetodoc.docid=documents.docid""")
+					JOIN documents ON coursetodoc.docid=documents.docid
+					ORDER BY coursetodoc.docid""")
 
 		cursor.execute(query)
 

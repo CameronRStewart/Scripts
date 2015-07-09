@@ -103,7 +103,7 @@ class Migration:
 		valid_numeric_chars = string.digits
 
 
-                dirty_string = unicode(dirty_string)
+        dirty_string = unicode(dirty_string)
 		if mode == 'f':
 			clean_string = ''.join(c for c in dirty_string if c in valid_filename_chars)
 		elif mode == 'c':
@@ -181,7 +181,7 @@ class Migration:
 						if self.run_mode == 'RUN':
 							shutil.copy(f, destination_path)
 							if not title == None and not title == '':
-								info_file.write("Filename: %s\nTitle(Description): %s\n\n" % (filename_no_path, title))
+								info_file.write("Filename: %s\nTitle(Description): %s\n\n" % (filename_no_path.encode('acsii', 'ignore'), title.encode('acsii', 'ignore')))
 					except shutil.Error as err:
 						logging.warning(err)
 

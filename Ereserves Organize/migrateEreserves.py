@@ -161,11 +161,12 @@ class Migration:
 				#logging.info("Copying from origin_path: %s to destination_path: %s" % (origin_path, destination_path))
 
 				# Have to assume that there is only one file in origin.
-				for f in glob.glob(origin_path):
+				for f in glob.glob(origin_path+"/*"):
 					try:
 						logging.info("Copying file: %s to %s" % (f, destination_path+"/"+title))
+						filename, file_extension = os.path.splitext(f)
 						if self.run_mode == 'RUN':
-							shutil.copy(f, destination_path+"/"+title)
+							shutil.copy(f, destination_path+"/"+title+"/"+file_extension)
 					except shutil.Error as err:
 						logging.warning(err)
 

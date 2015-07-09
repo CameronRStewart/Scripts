@@ -165,17 +165,27 @@ class Migration:
 				origin_path = self.origin_root+"/"+docid
 				destination_path = self.destination_root+path_tail
 
+				# Open or create 'info' file that relates filename to title (if title exists)
+				info_file_path = destination_path + "/" + "info.txt"
+
+				info_file = open(info_file_path, 'a+')
+
 				# Have to assume that there is only one file in origin.
 				for f in glob.glob(origin_path+"/*"):
 					try:
 						filename, file_extension = os.path.splitext(f)
 						logging.info("Copying file: %s to %s" % (f, destination_path))
+						logging.info("Info File info: Filename: %s\nTitle(Description): %s\n\n" % (f.rsplit('/', 1)[1]))
 						if self.run_mode == 'RUN':
 							shutil.copy(f, destination_path)
+							if not title == None and not title == '':
+								info_file.write("Filename: %s\nTitle(Description): %s\n\n" % (f.rsplit('/', 1)[1]))
 					except shutil.Error as err:
 						logging.warning(err)
 
 			row = cursor.fetchone()
+		if info_file not == None:
+			info_file.close()
 			
 
 

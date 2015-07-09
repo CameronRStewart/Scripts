@@ -153,6 +153,7 @@ class Migration:
 						if self.run_mode == 'RUN':
 							os.mkdir(path, self.default_permissions)
 						logging.debug("Created Directory: %s" % path)
+				logging.info("Created Directory tree: %s" % path)
 
 
 				origin_path = self.origin_root+"/"+docid

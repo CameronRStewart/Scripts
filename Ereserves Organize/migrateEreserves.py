@@ -103,7 +103,7 @@ class Migration:
 		valid_numeric_chars = string.digits
 
 
-        dirty_string = unicode(dirty_string)
+                dirty_string = unicode(dirty_string)
 		if mode == 'f':
 			clean_string = ''.join(c for c in dirty_string if c in valid_filename_chars)
 		elif mode == 'c':
@@ -112,7 +112,7 @@ class Migration:
 		elif mode == 'n':
 			clean_string = ''.join(c for c in dirty_string if c in valid_numeric_chars)
 		elif mode == 't':
-			continue
+			clean_string = dirty_string
 		else:
 			print ("There were errors that caused this application the exit.  Please see %s" % self.log_file_path)
 			logging.error("Unknown mode value passed to cleanDirectoyName.")
@@ -168,24 +168,29 @@ class Migration:
 				# Open or create 'info' file that relates filename to title (if title exists)
 				info_file_path = destination_path + "/" + "info.txt"
 
-				info_file = open(info_file_path, 'a+')
+                                if self.run_mode == 'RUN':
+                                        info_file = open(info_file_path, 'a+')
 
 				# Have to assume that there is only one file in origin.
 				for f in glob.glob(origin_path+"/*"):
 					try:
 						filename, file_extension = os.path.splitext(f)
 						logging.info("Copying file: %s to %s" % (f, destination_path))
-						logging.info("Info File info: Filename: %s\nTitle(Description): %s\n\n" % (f.rsplit('/', 1)[1]))
+                                                filename_no_path = f.rsplit('/', 1)[1]
+						logging.info("Info File info: Filename: %s\nTitle(Description): %s\n\n" % (filename_no_path, title))
 						if self.run_mode == 'RUN':
 							shutil.copy(f, destination_path)
 							if not title == None and not title == '':
-								info_file.write("Filename: %s\nTitle(Description): %s\n\n" % (f.rsplit('/', 1)[1]))
+								info_file.write("Filename: %s\nTitle(Description): %s\n\n" % (filename_no_path, title))
 					except shutil.Error as err:
 						logging.warning(err)
+                                
+                                if self.run_mode == 'RUN':
+                                        info_file.close()
 
 			row = cursor.fetchone()
-		if info_file not == None:
-			info_file.close()
+		
+                        
 			
 
 

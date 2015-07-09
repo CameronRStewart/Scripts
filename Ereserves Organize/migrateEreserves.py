@@ -2,7 +2,6 @@ import os
 import shutil
 import string
 import glob
-import sys
 import logging
 import mysql.connector
 from mysql.connector import errorcode
@@ -104,15 +103,13 @@ class Migration:
 		valid_numeric_chars = string.digits
 
 
-		dirty_string.decode('utf-8')
+                dirty_string = unicode(dirty_string)
 		if mode == 'f':
 			clean_string = ''.join(c for c in dirty_string if c in valid_filename_chars)
 		elif mode == 'c':
 			dirty_string.replace("/", "-")
 			clean_string = ''.join(c for c in dirty_string if c in valid_coursenumber_chars)
 		elif mode == 'n':
-			#dirty_string = str(dirty_string)
-			dirty_string = unicode(dirty_string)
 			clean_string = ''.join(c for c in dirty_string if c in valid_numeric_chars)
 		else:
 			print ("There were errors that caused this application the exit.  Please see %s" % self.log_file_path)
@@ -163,7 +160,6 @@ class Migration:
 
 				origin_path = self.origin_root+"/"+docid
 				destination_path = self.destination_root+path_tail
-				#logging.info("Copying from origin_path: %s to destination_path: %s" % (origin_path, destination_path))
 
 				# Have to assume that there is only one file in origin.
 				for f in glob.glob(origin_path+"/*"):

@@ -2,6 +2,7 @@ import os
 import shutil
 import string
 import glob
+import sys
 import logging
 import mysql.connector
 from mysql.connector import errorcode
@@ -103,13 +104,15 @@ class Migration:
 		valid_numeric_chars = string.digits
 
 
+		dirty_string.decode('utf-8')
 		if mode == 'f':
 			clean_string = ''.join(c for c in dirty_string if c in valid_filename_chars)
 		elif mode == 'c':
 			dirty_string.replace("/", "-")
 			clean_string = ''.join(c for c in dirty_string if c in valid_coursenumber_chars)
 		elif mode == 'n':
-			dirty_string = str(dirty_string)
+			#dirty_string = str(dirty_string)
+			dirty_string = unicode(dirty_string)
 			clean_string = ''.join(c for c in dirty_string if c in valid_numeric_chars)
 		else:
 			print ("There were errors that caused this application the exit.  Please see %s" % self.log_file_path)
@@ -136,7 +139,7 @@ class Migration:
 			deptname       = self.cleanString(row[2], mode='f')
 			abbreviation   = self.cleanString(row[3], mode='f')
 			number         = self.cleanString(row[4], mode='c')
-			coursename     = self.cleanString(row[5], mode='f')
+			coursename     = self.cleanString(row[5], mode='c')
 			term           = self.cleanString(row[6], mode='f')
 			year           = self.cleanString(row[7], mode='n')
 			instrlastnames = self.cleanString(row[8], mode='f')

@@ -103,7 +103,7 @@ class Migration:
 		valid_numeric_chars = string.digits
 
 
-                dirty_string = unicode(dirty_string)
+        dirty_string = unicode(dirty_string)
 		if mode == 'f':
 			clean_string = ''.join(c for c in dirty_string if c in valid_filename_chars)
 		elif mode == 'c':
@@ -111,6 +111,8 @@ class Migration:
 			clean_string = ''.join(c for c in dirty_string if c in valid_coursenumber_chars)
 		elif mode == 'n':
 			clean_string = ''.join(c for c in dirty_string if c in valid_numeric_chars)
+		elif mode == 't':
+			continue
 		else:
 			print ("There were errors that caused this application the exit.  Please see %s" % self.log_file_path)
 			logging.error("Unknown mode value passed to cleanDirectoyName.")
@@ -119,9 +121,11 @@ class Migration:
 		# Give ourself some room to avoid filename character count restrictions
 		# In general: filenames cant be longer than 255 chars.  
 		# We also need some room for the .pdf, .doc, et. al.
-		if len(clean_string) > 250:
-			logging.warning("Filename: %s was truncated to 250 chars." % clean_string)
-			clean_string = clean_string[:250]
+		# Titles, more accurately descriptions, are excluded.
+		if not mode == 't':
+			if len(clean_string) > 250:
+				logging.warning("Filename: %s was truncated to 250 chars." % clean_string)
+				clean_string = clean_string[:250]
 
 		return clean_string
 
@@ -132,7 +136,7 @@ class Migration:
 		while row is not None:
 
 			docid          = self.cleanString(row[0], mode='n')
-			title          = self.cleanString(row[1], mode='f')
+			title          = self.cleanString(row[1], mode='t')
 			deptname       = self.cleanString(row[2], mode='f')
 			abbreviation   = self.cleanString(row[3], mode='f')
 			number         = self.cleanString(row[4], mode='c')
@@ -165,9 +169,9 @@ class Migration:
 				for f in glob.glob(origin_path+"/*"):
 					try:
 						filename, file_extension = os.path.splitext(f)
-						logging.info("Copying file: %s to %s" % (f, destination_path+"/"+title+"/"+file_extension))
+						logging.info("Copying file: %s to %s" % (f, destination_path))
 						if self.run_mode == 'RUN':
-							shutil.copy(f, destination_path+"/"+title+"/"+file_extension)
+							shutil.copy(f, destination_path)
 					except shutil.Error as err:
 						logging.warning(err)
 

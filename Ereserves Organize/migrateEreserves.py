@@ -3,7 +3,7 @@ import shutil
 import string
 import glob
 import logging
-import mysql.connector
+import pymysql
 from mysql.connector import errorcode
 import ConfigParser
 
@@ -16,7 +16,6 @@ class Migration:
 		configParser = ConfigParser.ConfigParser()
 		configParser.readfp(open(r'config.txt'))
 		self.dbConfig = dict(configParser.items('database'))
-		self.dbConfig['raise_on_warnings'] = configParser.getboolean('database', 'raise_on_warnings')
 
 		self.origin_root = configParser.get('path', 'origin_root')
 		self.destination_root = configParser.get('path', 'destination_root')
@@ -51,15 +50,10 @@ class Migration:
 
 	def getEresDocumentInfo(self):
 		try:
-			con = mysql.connector.connect(**self.dbConfig)
-		except mysql.connector.Error as err:
-			if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-				logging.error("Database Connection Error: Access denied.  Check Username/Password.")
-			elif err.errno == errorcode.ER_BAD_DB_ERROR:
-				logging.error("Database Connection Error: Database doesn't exist.")
-			else:
-				logging.error(err)
-			print ("There were errors that caused this application the exit.  Please see %s" % self.log_file_path)
+			con = pymysql.connect(**self.dbConfig)
+		except pymysql.OperationalError as err:
+			logging.error(err)
+			print ("There were errors that caused this application to abort.  Please see %s for details" % self.log_file_path)
 			exit(1)
 
 		cursor = con.cursor()
@@ -102,12 +96,14 @@ class Migration:
 		# 0123456789
 		valid_numeric_chars = string.digits
 
+		dirty_string = str(dirty_string)
 
-		dirty_string = unicode(dirty_string)
+		#dirty_string = unicode(str(dirty_string), 'utf-8')
 		if mode == 'f':
 			clean_string = ''.join(c for c in dirty_string if c in valid_filename_chars)
 		elif mode == 'c':
 			dirty_string.replace("/", "-")
+			dirty_string.replace(",", "-")
 			clean_string = ''.join(c for c in dirty_string if c in valid_coursenumber_chars)
 		elif mode == 'n':
 			clean_string = ''.join(c for c in dirty_string if c in valid_numeric_chars)
@@ -143,7 +139,7 @@ class Migration:
 			coursename     = self.cleanString(row[5], mode='c')
 			term           = self.cleanString(row[6], mode='f')
 			year           = self.cleanString(row[7], mode='n')
-			instrlastnames = self.cleanString(row[8], mode='f')
+			instrlastnames = self.cleanString(row[8], mode='c')
 
 			if os.path.isdir(self.origin_root+"/"+docid):
 

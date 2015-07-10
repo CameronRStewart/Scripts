@@ -9,6 +9,9 @@ This folder houses puzzle solutions for various problems I've found on the net.
 ## Work:
 This folder houses some old work-related scripts, mostly file processing and system automation stuff
 
+### EreservesMigration ###
+This was a request to organize a ton of anonymous, old, poorly formatted files for archival.  These files were orginally managed and maintained through a 3rd party application.  This script takes what information that I could dig up and sorts, organizes, and supplements each of these files with information.
+
 ### moveCDMUsers.py:
 
 This is a simple script that I created to help with a somewhat tedious task on one of our repository systems.  Often enough with this application, it is easier to create a new updated instance than it is to try and updte it inline.  Thus I have written scripts like this one to transfer users created in a sort of archaic way - from one system to another.  Warning!!!  This is dirty and was only done after exhausting all other resources for automation.

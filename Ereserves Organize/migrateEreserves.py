@@ -177,7 +177,7 @@ class Migration:
 						if self.run_mode == 'RUN':
 							shutil.copy(f, destination_path)
 							if not title == None and not title == '':
-								info_file.write("Filename: %s\nTitle(Description): %s\n\n" % (filename_no_path.encode('acsii', 'ignore'), title.encode('acsii', 'ignore')))
+								info_file.write("Filename: %s\nTitle(Description): %s\n\n" % (filename_no_path, title))
 					except shutil.Error as err:
 						logging.warning(err)
 

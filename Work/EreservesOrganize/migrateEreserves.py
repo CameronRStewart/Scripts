@@ -4,7 +4,6 @@ import string
 import glob
 import logging
 import pymysql
-from mysql.connector import errorcode
 import ConfigParser
 
 

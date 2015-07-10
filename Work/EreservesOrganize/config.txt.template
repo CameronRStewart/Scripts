@@ -1,0 +1,25 @@
+[database]
+user =
+password =
+host =
+database =
+charset =
+
+[logging]
+log_path =
+log_level =
+
+[path]
+origin_root =
+destination_root = 
+default_permissions = 
+
+[mode]
+# run_mode indicates whether to actually perform action, or log what WOULD happen
+# Accepted values are:
+#
+# DEBUG (log only)
+# or
+# RUN (perform actions)
+
+run_mode = 

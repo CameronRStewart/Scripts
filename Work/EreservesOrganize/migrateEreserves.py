@@ -97,7 +97,6 @@ class Migration:
 
 		dirty_string = str(dirty_string)
 
-		#dirty_string = unicode(str(dirty_string), 'utf-8')
 		if mode == 'f':
 			clean_string = ''.join(c for c in dirty_string if c in valid_filename_chars)
 		elif mode == 'c':

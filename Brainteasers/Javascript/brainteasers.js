@@ -1,4 +1,5 @@
 // File to host various functions used to brush up on some basic JS skills.
+// These are VERY basic.  Im just playing around.
 
 function reverseStringRecursive(str) {
     if (str.length === 0) {

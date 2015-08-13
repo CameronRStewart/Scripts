@@ -1,4 +1,5 @@
 #!/bin/bash
+# monitor-tomcat.sh: 
 
 # Recommended cron:
 # Cron description: Run every ten Minutes after 5 minutes past the hour.
@@ -7,16 +8,19 @@
 # Purpose: Monitor tomcat. If tomcat is not responding well, restart
 #          both tomcat and apache.
 
-MAILTO="libtech@unm.edu"
+MAILTO="libtech@unm.edu,jragle@unm.edu"
 SERVICES=(httpd tomcat)
 hostname=$(hostname --short)
-TIME_WAIT="1m" #"1s" for testing
-DATE=$(date)
+TIME_WAIT="2m" #"1s" for testing
 SUBJECT1="$hostname: web services restarted"
 SUBJECT2="$hostname: web services not running!"
 SUCCESS="HTTP/1.1 200 OK"
 TRIMMED_SUCCESS=$(echo $SUCCESS | tr -d '[:space:]')
 CURL=$(curl -Is "localhost" | head -n 1 | tr -d '[:space:]')
+
+# Feature: Add a switch for silent/logging mode or manual, INFO mode.
+#  For example the cron would run the silent mode only logging progress.
+#  The other would assume manual run and output more [INFO] level output.
 
 # Create a temp file to record the events of the session.
 # This avoids having to manage logs this script will create via logrotate.d.
@@ -26,43 +30,59 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Functions:
+
+# time_date(): return the time/date right now.
+time_date () { echo "$(date --rfc-3339=seconds)"; }
+
+# get_status(): return the status code from a web connection.
+get_status () { echo "$(curl -Is "localhost" | head -n 1 | tr -d '[:space:]')"; }
+
+
+# Main body of the script:
 # Test for normal opperation
-if [ "$CURL" = "$TRIMMED_SUCCESS" ]
+if [ "$(get_status)" == "$TRIMMED_SUCCESS" ]
 then
-    echo $DATE “[INFO] - $HOSTNAME: $SERVICES responded normally.” >> $TMPFILE;
-    #DEBUG: cat $TMPFILE;
+    echo $(time_date) “[INFO] - $HOSTNAME: $SERVICES responded normally.” >> $TMPFILE;
+    #DEBUG:     cat $TMPFILE;
     rm -f $TMPFILE;
     exit;
 else
     # Assume something went wrong, stop services
-    echo $DATE “[WARN] - $HOSTNAME: [$SERVICES] responded abnormally.” >> $TMPFILE;
+    echo $(time_date) “[WARN] - $HOSTNAME: [$SERVICES] responded abnormally.” >> $TMPFILE;
     for item in ${SERVICES[*]}; do
-        echo $DATE “[WARN] - $HOSTNAME:   Stopping $item” >> $TMPFILE;
-        service $item stop
+        echo $(time_date) “[WARN] - $HOSTNAME:   Stopping $item” >> $TMPFILE;
+        service $item stop &> /dev/null
     done
 
     # Assume everything stopped cleanly, restart services
     for item in ${SERVICES[*]}; do
-        echo $DATE “[WARN] - $HOSTNAME:   Starting $item” >> $TMPFILE;
-        service $item start
+        echo $(time_date) “[WARN] - $HOSTNAME:   Starting $item” >> $TMPFILE;
+        service $item start &> /dev/null
     done
+
+    # Consider putting a while loop to test for valid return code
+    #  but also needs to timeout and give up after 5 minutes
+
+    # Test for TCP connections, taken from monitoring scripts
+    # cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }'
 
     # WAIT for a spell before testing
     sleep $TIME_WAIT
 
     CURL_AGAIN=$(curl -Is "localhost" | head -n 1 | tr -d '[:space:]')
-
-    if [ "$CURL_AGAIN" = "$TRIMMED_SUCCESS" ]
+    # Test web services again
+    if [ "$(get_status)" == "$TRIMMED_SUCCESS" ]
     then
-        echo $DATE “[WARN] - $HOSTNAME: [$SERVICES] have been restarted” >> $TMPFILE
-        SUBJECT=$SUBJECT1;
+        echo $(time_date) “[WARN] - $HOSTNAME: [${SERVICES[*]}] have been restarted” >> $TMPFILE
+        SUBJECT="$SUBJECT1";
     else
-        echo $DATE “[ERROR] - $HOSTNAME: [$SERVICES] attempt to be restarted failed!!” >> $TMPFILE
-        SUBJECT=$SUBJECT2;
+        echo $(time_date) “[ERROR] - $HOSTNAME: [${SERVICES[*]}] attempt to be restarted failed!!” >> $TMPFILE
+        SUBJECT="$SUBJECT2";
 
     fi
 fi
 
-mail -s $SUBJECT $MAILTO < $TMPFILE;
-cat $TMPFILE;  # This will end up in cron logs
+mail -s "$SUBJECT" $MAILTO < $TMPFILE;
+#DEBUG cat $TMPFILE;
 rm -f $TMPFILE;

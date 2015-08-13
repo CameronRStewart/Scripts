@@ -11,7 +11,7 @@
 MAILTO="libtech@unm.edu,jragle@unm.edu"
 SERVICES=(httpd tomcat)
 hostname=$(hostname --short)
-TIME_WAIT="2m" #"1s" for testing
+TIME_WAIT="4m" #"1s" for testing
 SUBJECT1="$hostname: web services restarted"
 SUBJECT2="$hostname: web services not running!"
 SUCCESS="HTTP/1.1 200 OK"
@@ -38,8 +38,11 @@ time_date () { echo "$(date --rfc-3339=seconds)"; }
 # get_status(): return the status code from a web connection.
 get_status () { echo "$(curl -Is "localhost" | head -n 1 | tr -d '[:space:]')"; }
 
+# get_minute (): return the current minute.
+get_minute () { echo $(date +%M); }
 
 # Main body of the script:
+
 # Test for normal opperation
 if [ "$(get_status)" == "$TRIMMED_SUCCESS" ]
 then
@@ -50,6 +53,11 @@ then
 else
     # Assume something went wrong, stop services
     echo $(time_date) “[WARN] - $HOSTNAME: [$SERVICES] responded abnormally.” >> $TMPFILE;
+
+    # Record how many CLOSE_WAIT connections 
+    CLOSE_WAITS="$(cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }' | tail -n 1)"
+    echo $(time_date) "[WARN] - found $CLOSE_WAITS CLOSE_WAIT TCP connections." >> $TMPFILE;
+
     for item in ${SERVICES[*]}; do
         echo $(time_date) “[WARN] - $HOSTNAME:   Stopping $item” >> $TMPFILE;
         service $item stop &> /dev/null
@@ -64,13 +72,10 @@ else
     # Consider putting a while loop to test for valid return code
     #  but also needs to timeout and give up after 5 minutes
 
-    # Test for TCP connections, taken from monitoring scripts
-    # cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }'
 
     # WAIT for a spell before testing
     sleep $TIME_WAIT
 
-    CURL_AGAIN=$(curl -Is "localhost" | head -n 1 | tr -d '[:space:]')
     # Test web services again
     if [ "$(get_status)" == "$TRIMMED_SUCCESS" ]
     then

@@ -55,7 +55,7 @@ else
     echo $(time_date) “[WARN] - $HOSTNAME: [$SERVICES] responded abnormally.” >> $TMPFILE;
 
     # Record how many CLOSE_WAIT connections 
-    CLOSE_WAITS="$(cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }' | tail -n 1)"
+    CLOSE_WAITS="$(cat /proc/net/tcp /proc/net/tcp6 2>/dev/null | awk ' /:/ { c[$4]++; } END { for (x in c) { print x, c[x]; } }' | tail -n 1 | cut -d ' ' -f 2)"
     echo $(time_date) "[WARN] - found $CLOSE_WAITS CLOSE_WAIT TCP connections." >> $TMPFILE;
 
     for item in ${SERVICES[*]}; do

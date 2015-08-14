@@ -61,12 +61,14 @@ else
     for item in ${SERVICES[*]}; do
         echo $(time_date) “[WARN] - $HOSTNAME:   Stopping $item” >> $TMPFILE;
         service $item stop &> /dev/null
+        wait;
     done
 
     # Assume everything stopped cleanly, restart services
     for item in ${SERVICES[*]}; do
         echo $(time_date) “[WARN] - $HOSTNAME:   Starting $item” >> $TMPFILE;
         service $item start &> /dev/null
+        wait;
     done
 
     # Consider putting a while loop to test for valid return code

@@ -1,3 +1,7 @@
 *.log
 *~
 .DS_Store
+*.pyc
+Brainteasers/jumpGame.py
+Brainteasers/jumpGame2.py
+
